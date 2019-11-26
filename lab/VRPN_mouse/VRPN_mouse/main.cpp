@@ -8,20 +8,18 @@
 #include "/usr/local/Cellar/vrpn/07.34/include/vrpn_Analog.h"
 #include "/usr/local/Cellar/vrpn/07.34/include/vrpn_Tracker.h"
 #include "/usr/local/Cellar/vrpn/07.34/include/vrpn_Button.h"
-
-
-
 #include <iostream>
 using namespace std;
-char temp = 0b00000000;
-char flag = 0b00000011;
+
+unsigned char temp = 0b00000000;
+unsigned char flag = 0b00000011;
 
 
 
 void VRPN_CALLBACK handle_analog( void* userData, const vrpn_ANALOGCB a )
 {
     int nbChannels = a.num_channel;
-    char pos = 0b00000000;
+    unsigned char pos = 0b00000000;
     cout << "Analog : ";
     
     for( int i=0; i < a.num_channel; i++ )
@@ -30,26 +28,26 @@ void VRPN_CALLBACK handle_analog( void* userData, const vrpn_ANALOGCB a )
         
     }
     if(a.channel[0]>0.5){
-        pos = pos | 00000100;
+        pos = pos | 0b00000100;
     }else{
-        pos = pos | 00001000;
+        pos = pos | 0b00001000;
     }
     if(a.channel[1]>0.5){
-        pos = pos | 00000001;
+        pos = pos | 0b00000001;
     }else{
-        pos = pos | 00000010;
+        pos = pos | 0b00000010;
     }
     switch (pos) {
-        case 0b00001000:
+        case 0b00001010:
             cout<<"A";
             break;
-        case 0b01001000:
+        case 0b00000110:
             cout<<"B";
             break;
-        case 0b00000001:
+        case 0b00001001:
             cout<<"C";
             break;
-        case 0b01000001:
+        case 0b00000101:
             cout<<"D";
             break;
         default:
@@ -58,6 +56,8 @@ void VRPN_CALLBACK handle_analog( void* userData, const vrpn_ANALOGCB a )
     }
     if(temp!=pos){
         cout<<" has changed Zone!";
+        //for beep
+        //cout << '\a';
     }
     temp = pos;
     cout << endl;
@@ -68,6 +68,8 @@ void VRPN_CALLBACK handle_button( void* userData, const vrpn_BUTTONCB b )
     cout << "Button '" << b.button << "': " << b.state << endl;
     if(b.button==2){
         cout <<"Right click!"<<endl;
+        //for beep
+        //cout << '\a';
         if(b.state==1){
             flag = 0b00000000;
         }
