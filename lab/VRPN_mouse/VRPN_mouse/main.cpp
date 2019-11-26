@@ -10,23 +10,28 @@
 #include "/usr/local/Cellar/vrpn/07.34/include/vrpn_Button.h"
 #include <iostream>
 using namespace std;
-
-unsigned char temp = 0b00000000;
-unsigned char flag = 0b00000011;
+//temp for last status of analog tracker
+static unsigned char temp;
+//flag for status of actived or deactived
+static unsigned char flag;
+//unsigned char temp = 0b00000000;
+//unsigned char flag = 0b00000011;
 
 
 
 void VRPN_CALLBACK handle_analog( void* userData, const vrpn_ANALOGCB a )
 {
     int nbChannels = a.num_channel;
+    //use a byte to store position flag
     unsigned char pos = 0b00000000;
     cout << "Analog : ";
-    
+    //print mouse position
     for( int i=0; i < a.num_channel; i++ )
     {
         cout << a.channel[i] << " ";
         
     }
+    //use bitwise to operate zone a-d
     if(a.channel[0]>0.5){
         pos = pos | 0b00000100;
     }else{
@@ -54,49 +59,48 @@ void VRPN_CALLBACK handle_analog( void* userData, const vrpn_ANALOGCB a )
             cout<<std::bitset<8>(pos);
             break;
     }
+    //if current zone is different then before print changed Zone
     if(temp!=pos){
         cout<<" has changed Zone!";
         //for beep
         //cout << '\a';
     }
+    //assigned current to last position
     temp = pos;
     cout << endl;
 }
 
 void VRPN_CALLBACK handle_button( void* userData, const vrpn_BUTTONCB b )
 {
+    //print button status
     cout << "Button '" << b.button << "': " << b.state << endl;
     if(b.button==2){
+        //if it is right button click print right click
         cout <<"Right click!"<<endl;
         //for beep
         //cout << '\a';
-        if(b.state==1){
-            flag = 0b00000000;
-        }
         flag = 0b00000000;
     }else{
-        
-            
+        //if it is left button click deactivated analog tracker
         flag = 0b00000001;
-        
-        
-        //vrpnAnalog->unregister_change_handler( 0, handle_analog );
     }
 }
 
 int main(int argc, char* argv[])
 {
-    
+    //assigned 2 tracker
     vrpn_Analog_Remote* vrpnAnalog = new vrpn_Analog_Remote("Mouse0@25.79.182.170:3883");
     vrpn_Button_Remote* vrpnButton = new vrpn_Button_Remote("Mouse0@25.79.182.170:3883");
-    
+    //assigned 2 change triger
     vrpnAnalog->register_change_handler( 0, handle_analog );
     vrpnButton->register_change_handler( 0, handle_button );
-    
-    
+    //init the variable
+    temp = 0b00000000;
+    flag = 0b00000011;
+    //loop
     while(1)
     {
-        
+        //if right click active analog handler
         if(flag==0b00000000){
             try{
                 vrpnAnalog->register_change_handler( 0, handle_analog );
@@ -105,6 +109,7 @@ int main(int argc, char* argv[])
             }
             flag = 0b00000011;
         }
+        //if left click deactivate analog handler
         if(flag==0b00000001){
             try{
                 vrpnAnalog->unregister_change_handler( 0, handle_analog );
@@ -113,6 +118,7 @@ int main(int argc, char* argv[])
             }
             flag = 0b00000111;
         }
+        //if it is active then we do tracking
         if(flag==0b00000011){
             try{
                 vrpnAnalog->mainloop();
@@ -120,7 +126,7 @@ int main(int argc, char* argv[])
                 cout<<"runtime_error!"<<endl;
             }
         }
-        
+        //track button
         vrpnButton->mainloop();
     }
     
